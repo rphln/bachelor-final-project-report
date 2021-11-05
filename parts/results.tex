@@ -1,0 +1,88 @@
+\section{Results}
+
+\input{parts/comparisons}
+
+\input{parts/comparisons-large}
+
+In this section, we discuss the results obtained from training the neural networks with the loss functions discussed through the work, presented in Table~\ref{table:quantitative}. We also present a few handpicked samples in Figure~\ref{figure:comparisons} and Figure~\ref{figure:comparisons-large} for discussion as part of our qualitative analysis. 
+
+Two images which did not originate from the datasets listed in Section~\ref{section:datasets} were included for qualitative analysis: the image in the fourth row is an illustration frequently used as a test case across super-resolution works. The level of details in this image reduces the gap between the result obtained from the baseline network (Figure~\ref{figure:comparisons/baseline}) and our best result (Figure~\ref{figure:comparisons/mixge}). \adding{The image in the second row was included as a sample vectorial illustration image, allowing the generation of a low-resolution input without downsampling artifacts.}
+
+\subsection{Analysis on the small network}
+
+From experimental observations, the $\MAE$ caused the training process to reach a plateau after the least number of iterations among the studied functions, followed by the Pencil Sketch, $\DSSIM$. The training process persisted for the $\MSE$, the $\MSDSSIM$, the perceptual loss and the mixed gradient error until the upper limit of 1500 epochs.
+
+While the images produced by the network trained with the MAE loss have less noise than the one trained with the MSE, it has caused aliased edges in flat images, such as the second row in Figure~\ref{figure:comparisons/mae}, motivating further exploration.
+
+It was observed that the DSSIM led the network to optimize for edge restoration at the expense of accuracy in color reproduction.
+In the second row of Figure~\ref{figure:comparisons/dssim}, the image has less noise than its counterparts, but the colorization of the character is visibly different.
+This can also be observed in the first row: the image has a slight red hue compared to its grayscale counterparts.
+While this did not occur in the network trained with the $\MSDSSIM$ loss (Figure~\ref{figure:comparisons/ms-dssim}), the images produced by it are also noisier.
+
+\begin{figure}[htbp]
+    \centering
+
+    \subfloat[MixGE]{
+        \includegraphics[width=0.45\linewidth]{figs/SR/Wikipe-tan/Ours@ESPCN@Sobel001}
+        \label{fig:comparison/wiki-ours}
+    }
+    \subfloat[Baseline]{
+        \includegraphics[width=0.45\linewidth]{figs/SR/Wikipe-tan/Photography}
+        \label{fig:comparison/wiki-photo}
+    }
+    \smallbreak
+    \subfloat[MixGE]{
+        \includegraphics[width=0.45\linewidth]{figs/SR/SYNLA@Color/Ours@ESPCN@Sobel001}
+        \label{fig:comparison/synla-ours}
+    }
+    \subfloat[Baseline]{
+        \includegraphics[width=0.45\linewidth]{figs/SR/SYNLA@Color/Photography}
+        \label{fig:comparison/synla-photo}
+    }
+
+    \caption{
+        \label{fig:comparison}
+        Comparison of the photography-centric baseline against the small network trained with the MixGE loss ($\lambda_G = 0.01$).
+        Figure~\ref{fig:comparison/wiki-ours} depicts a case where the neural network trained on the gradient loss produces smoother edges.
+        Figure~\ref{fig:comparison/synla-ours} depicts a pathological case with excessive production of noise.
+    }
+\end{figure}
+
+As seen in Table~\ref{table:quantitative}, variations of the MixGE loss function have led to the best results in most recorded metrics. While it has been observed to reconstruct well in general scenarios, images restored from blurry low-resolution pictures, such as the image in the second row in Figure~\ref{figure:comparisons}, have shown the highest incidence of noise among the trained networks, as seen in Figure~\ref{fig:comparison}, characterizing a pathological case.
+
+Our experiments showed little to no impact in assigning three different weights ($0.01$, $0.10$, $1.00$) to the $\lambda_G$ gradient component of the MixGE loss --- as seen in Table~\ref{table:quantitative}, metric results were close to each other and no discernible differences were observed in an analysis of the reconstructed images.
+
+Despite their similar formulation, the Pencil Sketch loss function (Figure~\ref{figure:comparisons/sketch}) did not show comparable performance to the Mixed Gradient Error, having substantially lower scores across the board and producing noisier images.
+We also found this loss function to be inherently unstable during the training, sometimes causing divisions by zero despite the stabilizing term. This instability may be attributed to the network output being unconstrained: during the early stages of training, a randomly initialized network can produce values which causes a division by zero in Equation~\ref{equation:sketch}, despite the stabilizing term $\epsilon$, making this loss function unsuitable for such cases.
+
+The Perceptual Loss (Figure~\ref{figure:comparisons/perceptual}) has shown similar quality characteristics as the Mixed Gradient Error: in images with solid regions, it produces less noise than the alternatives while producing more of such artifacts in blurry images.
+
+We also observed that the depth of the chosen feature descriptor $\phi$ entails a trade-off: a shallow descriptor may optimize only for lower-level features, such as drawing primitives, while a deep descriptor may discard details deemed unnecessary to the task for which it was previously trained, potentially causing undesirable artifacts, as seen in Figure~\ref{figure:perceptual/comparison}. 
+This was explored through the inclusion and omission of a pooling layer in the feature descriptor: because the noise information is discarded by the feature extractor with the pooling, it is not back-propagated, causing the reconstructed image in Figure~\ref{figure:perceptual/with-maxpool} to be unconstrained and have artifacts that would otherwise not be present, as in Figure~\ref{figure:perceptual/without-maxpool}.
+
+\begin{figure}[htbp]
+    \centering
+    \label{figure:perceptual/comparison}
+
+    \subfloat[\label{figure:perceptual/without-maxpool}Without Max Pooling]{
+        \includegraphics[width=0.45\linewidth]{figs/perceptual/BeforeMaxPool}
+    }
+    \subfloat[\label{figure:perceptual/with-maxpool}With Max Pooling]{
+        \includegraphics[width=0.45\linewidth]{figs/perceptual/AfterMaxPool}
+    }
+    \caption{
+        Effects of the inclusion and omission of a pooling operation in a feature descriptor.
+    }
+\end{figure}
+
+Regarding the modifications applied to the ESPCN architecture, we observe that the addition of the non-parametric normalization layer at the start of the network helped the training process by making the model to learn faster.
+
+\subsection{\label{section:analysis-large-network}Analysis on the large network}
+
+In regards to the larger network, three factors that particularly stand out in Table~\ref{table:quantitative} and in Figure~\ref{figure:comparisons-large} are described in this section.
+
+The Mean Squared Error network yielded substantially worse results than all of the other large networks, producing a large amount of noise artifacts in the images, shown in Figure~\ref{figure:comparisons/large/mse}. This has caused the network to produce results with worse visual quality than the ones produced by the small network (Figure~\ref{figure:comparisons}), despite higher metric scores.
+
+Contrary to our previous expectations that a loss function would retain its performance characteristics across network size, Table~\ref{table:quantitative} shows that this may not be true in practice: the Structural Dissimilarity and the Mean Absolute Error, which performed poorly on the smaller network, yielded the best metric results.
+
+With exception of the Mean Squared Error and the Multi-scale Structural Similarity networks, most results are visually indistinguishable. This could be explained by considering that a sufficiently large network may be able to learn all of the characteristics of a training dataset, rendering the intrinsic prioritization of a loss function redundant.

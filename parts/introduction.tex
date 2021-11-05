@@ -1,0 +1,36 @@
+\section{Introduction}
+
+Nowadays, high-definition screens are becoming increasingly available due to advances in display technologies: statistics show a nine fold growth in the number of ultra-high-definition televisions from $2014$ to $2019$~\cite{statista2019tv}. To make the best use of high-definition displays, the availability of high-resolution imagery is desirable. However, while new content may be produced in high-resolution, previously recorded media may only be available in low-resolution.
+
+Enlarging images requires the use of some method to fill in pixels with unknown values. The most naive method, referred to as nearest neighbor interpolation, is to repeat the intensity of the closest known pixel. However, this method introduces artifacts on the image, creating aliasing. A more elaborated method to fill in the unknown values is to interpolate the intensity based on the neighbors value and a polynomial function: \eg, linear and bicubic interpolation. The choice of the interpolation method also impacts the perceptual quality of the result by potentially producing unwanted artifacts: in this case, there is a loss in the definition of the edges as the image becomes blurry~\cite{gonzalez2018}. Figure~\ref{fig:interpolation} exemplifies the artifacts introduced by the nearest neighbor and bicubic interpolation methods.
+
+\begin{figure}[t]
+  \centering
+
+  \subfloat[Ground~Truth\label{figure:interpolation/truth}]{ \includegraphics[width=0.3\linewidth]{figs/interpolation/original} }
+  \hfill
+  \subfloat[Nearest neighbor interpolation\label{figure:interpolation/nearest}]{ \includegraphics[width=0.3\linewidth]{figs/interpolation/nearest} }
+  \hfill
+  \subfloat[Bicubic interpolation\label{figure:interpolation/bicubic}]{ \includegraphics[width=0.3\linewidth]{figs/interpolation/cubic} }
+
+  \caption{
+    Examples of distortions produced by interpolation methods when applied to a low-resolution version of image~\ref{figure:interpolation/truth}. Regions outlined in magenta are magnified to aid the comparison between methods. The edges in image \ref{figure:interpolation/nearest} have aliasing artifacts not present in the Ground~Truth. In the result of the interpolation method \ref{figure:interpolation/bicubic}, it is possible to observe the blur along the edges. The Ground~Truth image is from the SYNLA dataset~\cite{synla}.
+    \label{fig:interpolation}}
+\end{figure}
+
+Single-Image Super-Resolution (SISR) is a classical task in computer vision of recovering a high-resolution image from a single low-resolution sample. It is inherently a ill-posed problem, as several possible solutions exist for a given low-resolution image~\cite{dong2015image}.
+Due to the details present in high-resolution images with high perceptual quality, the task is widely used in works involving high-definition television, medical, satellite and security imagery~\cite{shi2016realtime, yang2019deep}.
+
+One of the previous representative solutions for this problem employed a pipeline based on sparse coding pipeline with steps such as patch-extraction, dictionary look-ups and reconstruction in order to perform this task \cite{yang2008image,yang2010image}. However, it was shown that the process could be made more efficient, and potentially more accurate, by employing Convolutional Neural Networks (CNNs) with internal layers equivalent to such steps~\cite{dong2015image}.
+
+In fact, CNNs achieved memorable results in the task of creating super-resolution images~\cite{shi2016realtime, dong2015image, ledig2017photorealistic, lim2017enhanced}. However, their application is focused on real world images. Therefore, one of the media type often reproduced in the high-quality screens, the illustrations, are underrepresented in the deep learning literature.
+
+Illustrations, \ie images from comic books, manga, cartoons and anime, are produced by an entirely different process from photography and generally focus only on salient details while abstracting the rest: edges are overly emphasized and complex textures are often replaced with flat regions or simplified patterns. In applications such as style transfer, these intrinsic difference causes the neural network to produce undesirable artifacts likened to watercolor paintings, where noisy transition textures are generated instead of the expected simplified patterns~\cite{danbooru2020}. The proposed work explores the application of deep learning techniques --- specifically, CNNs --- to the problem of single-image super resolution within the niche of illustrations, which potential applications include enhancing drawing, comics or --- when combined with video processing techniques --- animations~\cite{dandere2x}.
+
+The main contribution of this work is a quantitative, through the SSIM and PSNR metrics, and qualitative evaluation of four loss functions in order to determine which produces the most accurate and perceptually pleasing images in the SISR task. \adding{Furthermore, we evaluate whether using a larger neural network impacts the ordering of the best to worst loss functions.}
+
+\begin{figure*}[t]
+  \includegraphics[width=\linewidth]{figs/3rd-party/shi2016realtime/networkstructure.jpg}
+  \caption{Architecture overview of the ESPCN~\cite{shi2016realtime} network. Our application of the architecture differs from the original by inserting a normalization layer after the input and by using RGB images from end to end. Source: Shi~\etal~\cite{shi2016realtime}}
+  \label{figure:espcn}
+\end{figure*}

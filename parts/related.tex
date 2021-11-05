@@ -1,0 +1,30 @@
+\section{Related Work}
+
+In this section, we present an overview of the Single-Image Super-Resolution (SISR) area by exploring remarkable works. For the sake of clarity, we divide the works in the section related to CNN architectures, quality metrics, and loss functions applied in the SISR problem.
+
+\subsection{Super-resolution neural networks}
+
+The concept of Convolutional Neural Networks has been around since the late 1980s~\cite{lecun1989backpropagation}, with its resurgence in recent years justified by advances in hardware and algorithms and by the favorable results exhibited in tasks such as image classification and object recognition~\cite{dong2015image,yang2019deep}.
+
+A breakthrough in the application of deep learning for single-image super-resolution was the SRCNN~\cite{dong2015image}, which first scaled the input images with the bicubic interpolation and then forwarded their Y-channel through three convolutional layers. This approach can be seen as using a neural network to reduce the artifacts introduced by the bicubic method in the resulting image. The results achieved by the approach either surpassed or matched the state of the art at the time.
+
+Shi~\etal proposed the Efficient Sub-Pixel Convolutional Neural network (ESPCN)~\cite{shi2016realtime} architecture, which has shown superior results over the SRCNN while being more time efficient and with fewer learnable weights. \adding{This was enabled by the removal of the bicubic interpolation step, which increased feature map sizes while not producing an equivalent amount of additional information, and the use of the sub-pixel convolution layer, depicted in Figure~\ref{figure:espcn}, as the network output.}
+
+Deeper architectures, such as SRResNet~\cite{ledig2017photorealistic}, EDSR~\cite{lim2017enhanced} and RDN~\cite{zhang2018residual}, have been enabled by the use of residual networks~\cite{he2016deep}, which address the vanishing gradients problem~\cite{bengio1994learning}.
+
+Haris~\etal~\cite{haris2018deep} proposed an iterative up and downsampling method with units combining intermediate features to error maps calculated by upsampling the error in an internal input reconstruction pipeline.
+
+\subsection{Loss functions for image reconstruction}
+
+The loss function serves as the objective in the deep learning optimization process, guiding its training and, in image reconstruction tasks, determining how to compare a synthesized sample to its ground truth~\cite{zhao2016loss}. Given the differences between illustrations and photographs, we are interested in examining the effects that the choice of a loss function on the characteristics of the reconstructed images. The focus of this work is in the analysis of four loss functions: Mean Squared Error, Mean Absolute Error, the usage of the Structural Similarity Index Measure as a loss function~\cite{zhao2016loss}, and, based on the emphasis on contours that illustrations commonly exhibit, a mixed loss function which accounts for image gradients through the Sobel operator~\cite{lu2019single}.
+
+The mean squared error (MSE) loss is considered a popular choice \cite{zhao2016loss}, being employed in the works we build upon \cite{dong2015image,shi2016realtime}. The use of mean absolute error (MAE) was proposed as an attempt to overcome limitations of the MSE, said to produce splotchy artifacts \cite{zhao2016loss}. Despite the MAE providing improvements over the MSE, its results were said to be sub-optimal, leading to the exploration of other loss functions \cite{zhao2016loss}. The structural similarity index measure (SSIM)~\cite{wang2004image} is a metric motivated by the human visual perception, which evaluates images accounting for perceived changes in structural information. Zhao~\etal proposed the use of the SSIM \adding{and the multi-scale SSIM} as loss functions for image restoration neural networks.
+
+Alternatives have been proposed in order to produce images with higher perceptual quality for humans. Johnson~\etal proposed to use a feature extractor from a classifier, \eg, VGG-16~\cite{simonyan2015deep}, to describe the ground truth and reconstructed image, and then calculate the distance between the feature maps. The authors demonstrate that this perceptual loss embed domain knowledge in the training process~\cite{johnson2016perceptual}. Ledig~\etal~\cite{ledig2017photorealistic} introduced the use of Generative Adversarial Networks (GANs)~\cite{goodfellow2014generative} for SISR in order to produce photo-realistic images.
+
+Given that illustrations place emphasis on lines, a method that optimizes for that should intuitively perform better. The use of an edge detection operator provides another means of embedding such domain knowledge in the context of illustrations. To that end, we explored the mixed gradient error, which is composed by MSE and a weighted mean gradient error~\cite{lu2019single}, calculated using the classic edge detection filter proposed by Sobel~\cite{kanopoulos1988design}.
+\adding{A loss function based on the pencil sketch border detection filter, which, unlike the Sobel filter, preserves depth information}~\cite{galindo2019image}\adding{, was also explored.}
+
+\subsection{Evaluating perceptual quality}
+
+The structural similarity index measure (SSIM) and peak signal-to-noise ratio (PSNR) are widely used metrics for quantitatively estimating the effectiveness of image reconstruction methods \cite{dong2015image,shi2016realtime,zhao2016loss,lu2019single}. However, their adequacy for the human perception has been questioned, with works exhibiting restored images with better perceptual quality despite lower metric scores \cite{johnson2016perceptual,ledig2017photorealistic}. Thus, we also direct our focus in qualitative comparisons across loss functions.

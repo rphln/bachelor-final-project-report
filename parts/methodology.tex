@@ -1,0 +1,212 @@
+\section{Methodology}
+
+Our work consisted in evaluating the effects of the loss function in the training of CNNs for the single-image super-resolution task for illustrations.
+Each loss was evaluated by training our chosen neural network architectures from scratch using an illustration dataset, then we performed quantitative and qualitative analysis on their outputs.
+In this section, we present how we carried the training and the analysis of the CNN models.
+
+% \subsection{\cutoff{Neural network architecture}}
+% \label{sec:metodologia-cnn}
+
+
+% We base our methodology upon the ESPCN~\cite{shi2016realtime} CNN architecture, presented in Figure~\ref{figure:espcn}. The choice of a shallower network architecture over the more recent deep residual networks~\cite{ledig2017photorealistic,lim2017enhanced} is based on the goal of this work of making relative evaluations of loss functions, under the assumption that such relationships would be maintained if reevaluated on more complex networks. Thus, we default to training the simpler architecture, aiming faster experimentation cycles.
+
+% Following previous observations that networks trained on RGB images perform best on super-resolution tasks~\cite{dong2015image}, we modified the ESPCN architecture to operate from end-to-end on RGB images. To that end, we modify the number of input and output channels to 3, which raised the number of learnable weights of the network. We also added an additional non-parametric normalization layer at the start of the network to approximate the input into a standard normal distribution.
+
+\subsection{\adding{Neural network architectures}}
+\label{section:methodology/architectures}
+
+We explore two convolutional neural network architectures in this work:
+
+\begin{enumerate}
+  \item A small network, inspired by the ESPCN architecture~\cite{shi2016realtime}, depicted in Figure~\ref{figure:espcn}, used for the majority of the experiments primarily in order to evaluate a larger number of loss functions through faster exploration cycles.
+  \item A large network, inspired by the SRResNet architecture~\cite{ledig2017photorealistic}, depicted in Figure~\ref{figure:residual}, used primarily to verify whether the hypothesis that a loss function will retain its behavior across network sizes.
+\end{enumerate}
+
+
+Following previous observations that networks trained on RGB images perform best on super-resolution tasks~\cite{dong2015image}, we modified the ESPCN architecture to operate from end-to-end on RGB images. To that end, we modify the number of input and output channels to 3, which raised the number of learnable weights of the network. We also added an additional non-parametric normalization layer at the start of the network to approximate the input into a standard normal distribution.
+
+In order to verify whether the aforementioned hypothesis is true, we also evaluated a subset of the loss functions on a larger network. The core of this network is composed of eight residual blocks with identical layouts, each composed of two convolutional layers, two instance normalization~\cite{ulyanov2016instance} layers and one parametric ReLU~\cite{he2015delving} activation function.
+
+Similarly to our modified ESPCN architecture, this residual network contains an input normalization layer. A non-parametric denormalization layer, defined was the inverse function of the normalization layer, was added at the end of the network in order to map a standard normal distribution output into the same distribution as the input.
+
+\begin{figure}[tbh]
+  \centering
+  \includegraphics[width=\linewidth]{figs/residual/Residual.pdf}
+  \caption{Architecture overview of our residual network architecture.}
+  \label{figure:residual}
+\end{figure}
+
+\subsection{Loss Functions}
+
+We evaluate the impact of four loss functions in the training process of the CNN model based on the ESPCN architecture to create super-resolution images in the context of illustrations.
+
+\subsubsection{Mean Squared Error}
+
+The Mean Squared Error~(MSE) for a high-resolution image $y$ and its reconstructed counterpart $\hat{y}$ can be defined as:
+
+\begin{equation}
+  \MSE(\hat{y}, y) = \frac{1}{n}\sum_{p \in{P}} [y_{p} - \hat{y}_{p}]^2~\text{,}
+  \label{equation:mse}
+\end{equation}
+
+\noindent in which $P$ is the set of the indices of the pixels and $n$ is their amount.
+
+Another metric to evaluate the quality of the reconstruction in the context of image reconstruction, is the Peak Signal-to-Noise Ratio (PSNR), that can be expressed as:
+
+\begin{equation}
+  \PSNR(\hat{y}, y) = 10 \cdot \log_{10} \left( \frac{1}{\MSE(\hat{y}, y)} \right)~\text{.}
+  \label{equation:psnr}
+\end{equation}
+
+Analyzing the relation between MSE and PSNR, it can be seen that minimizing MSE maximizes the PSNR between $y$ and $\hat{y}$.
+Therefore, as pointed in the literature~\cite{dong2015image,johnson2016perceptual}, conducting the training process using MSE leads to high values of PSNR.
+This MSE-PSNR relation motivates the designation of the MSE as the default choice~\cite{zhao2016loss} for image reconstruction if one considers the PSNR a suitable proxy for the human assessment of perceptual quality.
+
+\subsubsection{Mean Absolute Error}
+
+The use of the Mean Absolute Error~(MAE) has previously been proposed as an attempt to reduce the artifacts introduced by the MSE loss~\cite{zhao2016loss}. Differently from the MSE (Equation~\ref{equation:mse}), the errors are weighted uniformly in MAE formulation, as follows:
+
+\begin{equation}
+  \MAE(\hat{y}, y) = \frac{1}{n}\sum_{p \in{P}} |y_{p} - \hat{y}_{p}|~\text{.}
+  \label{equation:mae}
+\end{equation}
+
+\subsubsection{Structural Dissimilarity}
+
+By employing a loss function motivated by the human perception, one should expect yields in the perceptual quality of the generated images.
+To that end, we evaluate the use of the Structural Dissimilarity Index Measure (DSSIM) loss function~\cite{zhao2016loss} derived from the Structural Similarity Index Measure (SSIM) metric, defined as:
+
+\begin{equation}
+  \DSSIM(\hat{y}, y) = \frac{1 - \SSIM(\hat{y}, y)}{2}~\text{.}
+\end{equation}
+
+\noindent where $\SSIM$, in turn, is defined for a window of $y$ and $\hat{y}$ as:
+
+\begin{equation}
+  \begin{aligned}
+    \SSIM(\hat{y}, y)
+     & = \SSIML(\hat{y}, y) \cdot \SSIMCS(\hat{y}, y)                                                                                                                       \\
+     & = \frac{2 \mu_{\hat{y}} \mu_{y} + c_1}{\mu_{\hat{y}}^2 + \mu_{y}^2 + c_1} \cdot \frac{2 \sigma_{\hat{y}y} + c_2}{\sigma_{\hat{y}}^2 + \sigma_{y}^2 + c_{2}}~\text{,}
+  \end{aligned}
+\end{equation}
+
+\noindent in which $c_1$ and $c_2$ are stabilizing terms, \adding{the $\SSIML(\hat{y}, y)$ component represents luminance and $\SSIMCS(\hat{y}, y)$ contrast sensitivity.}
+For a given $x$, $\mu_{x}$ and $\sigma^2_{x}$ are the mean and variance, respectively, computed with a Gaussian filter with standard deviation $\sigma_{G} = 1.5$ and window size $11$.
+
+\subsubsection{\adding{Multi-scale Structural Dissimilarity}}
+
+This variant of the structural similarity is conducted over multiple scales through a process of multiple stages of sub-sampling, reducing the impact of the choice of $\sigma_{G}$~\cite{zhao2016loss}.
+
+Similarly to the structural dissimilarity, the Multi-scale Structural Dissimilarity ($\MSDSSIM$) is defined as function of the Multi-scale Structural Similarity (MS-SSIM):
+
+\begin{equation}
+  \MSDSSIM(\hat{y}, y) = 1 - \MSSSIM(\hat{y}, y)~\text{,}
+\end{equation}
+
+\noindent in which the $\MSSSIM$ function is:
+
+\begin{equation}
+  \MSSSIM(\hat{y}, y) = \SSIM(\hat{y}^M, y^M)^{\gamma_M} \prod^{M - 1}_{i = 1}{\SSIMCS(\hat{y}^i, y^i)^{\gamma_i}}~\text{.}
+\end{equation}
+
+The arguments $\hat{y}^i$ and $y^i$ are obtained by downsampling $\hat{y}$ and $y$ by a factor $2^{i - 1}$ with the average pooling operator.
+
+The original authors of the method proposed~\cite{wang2004image} the use of the parameters $\gamma_1 = 0.0448$, $\gamma_2 = 0.2856$, $\gamma_3 = 0.3001$, $\gamma_4 = 0.2363$, $\gamma_5 = 0.1333$ and $M = 5$, obtained through a quality assessment survey.
+
+% \review{Está OK manter esses pesos aqui? Eles não fazem parte dos meus experimentos: eu apenas os copiei.}
+
+\subsubsection{Mixed Gradient Error}
+
+With regards to the emphasis on lines exhibited by illustrations, we also explore the Mixed Gradient Error ($\MixedGradientError$), which embeds the Sobel operator in order to guide the network to produce sharp edges which are close to those of the ground truth~\cite{lu2019single}. The Mixed Gradient Error can be defined as:
+
+\begin{equation}
+  \begin{aligned}
+    \MixedGradientError(\hat{y}, y)
+     & = \MSE(\hat{y}, y)                           \\
+     & + \lambda_{G}\MSE(G(\hat{y}), G(y))~\text{,}
+  \end{aligned}
+\end{equation}
+
+\noindent where the hyperparameter $\lambda_{G}$ is a weighting factor and $G(y)$ represents the gradient magnitude yielded by the Sobel operator, \adding{exemplified in Figure~\ref{figure:filters/sobel}} and defined as:
+
+\begin{equation}
+  G(y) = \sqrt{G_{X}^{2}(y) + G_{Y}^{2}(y)}~\text{,}
+\end{equation}
+
+\noindent for the gradient maps ${G_{X}}$ and {$G_{Y}$} in the $X$ and $Y$ direction, respectively:
+\begin{equation}
+  G_{X}(y) = y \ast
+  \begin{bmatrix}
+    -1 & -2 & -1 \\
+    0  & 0  & 0  \\
+    1  & 2  & 1
+  \end{bmatrix}
+\end{equation}
+
+\noindent and
+
+\begin{equation}
+  G_{Y}(y) = y \ast
+  \begin{bmatrix}
+    -1 & 0 & 1 \\
+    -2 & 0 & 2 \\
+    -1 & 0 & 1
+  \end{bmatrix}~\text{,}
+\end{equation}
+
+\noindent in which $\ast$ is the convolution operator.
+
+\subsubsection{\adding{Pencil Sketch}}
+
+Pencil sketch is an image processing filter used to suppress colors and textures while preserving edges and depth, simulating the use of different pencils and strokes on paper~\cite{galindo2019image}, as seen in Figure~\ref{figure:filters/sketch}.
+
+\begin{figure}[bth]
+  \centering
+  \subfloat[Input]{
+    \includegraphics[width=0.3\linewidth]{figs/sketch/Set14@Greyscale.png}
+  }
+  \subfloat[\label{figure:filters/sobel}Sobel filter]{
+    \includegraphics[width=0.3\linewidth]{figs/sketch/Set14@Sobel.png}
+  }
+  \subfloat[\label{figure:filters/sketch}Pencil Sketch filter]{
+    \includegraphics[width=0.3\linewidth]{figs/sketch/Set14@Sketch.png}
+  }
+  \caption{Unlike the Sobel edge detection method, the pencil sketch filter preserves depth information and does not convert edge traces into lines.}
+  \label{figure:filters/comparison}
+\end{figure}
+
+The pencil sketch filter is defined as:
+
+\begin{equation}
+    \label{equation:sketch}
+    \Sketch(I) = \frac{\Grayscale(I) + \epsilon}{\Gaussian(\Grayscale(I)) + \epsilon}~\text{,}
+\end{equation}
+
+\noindent where $\epsilon$ is a small (\ie, $10^{-12}$) stabilizing term to prevent divisions by zero, $\Gaussian(I)$ is the Gaussian filter and $\Grayscale(I)$ converts an image to grayscale with the formula:
+
+\begin{equation}
+  \Grayscale(I) = 0.299 \cdot I_{\text{Red}} + 0.587 \cdot  I_{\text{Green}} + 0.114 \cdot I_{\text{Blue}}~\text{.}
+\end{equation}
+
+Then, similarly to the Mixed Gradient Error, the Pencil Sketch Loss can be defined in function of the MSE:
+
+\begin{equation}
+  \begin{aligned}
+    \ell_{\text{Sketch}}(\hat{y}, y)
+     & = \MSE(\hat{y}, y)                            \\
+     & + \MSE(\Sketch(\hat{y}), \Sketch(y))~\text{.}
+  \end{aligned}
+\end{equation}
+
+
+\subsubsection{\label{section:perceptual-loss}\adding{Perceptual Loss}}
+
+Perceptual loss functions aim to minimize the differences in high-level features, extracted through a pre-trained convolutional neural network, rather than the pixel-wise difference for a given pair of images, with the goal of being robust against changes that are imperceptible to humans~\cite{johnson2016perceptual}. Intuitively, these loss functions can also be interpreted as optimizing for the reconstruction of features deemed most important to solve, \eg, a classification task.
+
+A perceptual loss can be defined in terms of the MSE as:
+
+\begin{equation}
+  \ell_{\text{Perceptual}}(\hat{y}, y) = \MSE(\phi(\hat{y}), \phi(y)) \text{,}
+\end{equation}
+
+\noindent where $\phi(x)$ is a feature descriptor from a convolutional neural network.

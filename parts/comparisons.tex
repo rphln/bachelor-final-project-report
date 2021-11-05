@@ -1,0 +1,61 @@
+\begin{figure*}[tbhp]
+    \centering
+
+    \subfloat[Input]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/LR}
+    }
+    \subfloat[Ground Truth]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/HR}
+    }
+    \subfloat[Bicubic]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Bicubic}
+    }
+    \subfloat[Baseline]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Photography}
+        \label{figure:comparisons/baseline}
+    }
+    \subfloat[Ours (MAE)]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Ours@ESPCN@L1}
+        \label{figure:comparisons/mae}
+    }
+    \subfloat[Ours (MSE)]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Ours@ESPCN@L2}
+        \label{figure:comparisons/mse}
+    }
+    \smallbreak
+    \subfloat[Ours (DSSIM)]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Ours@ESPCN@SSIM}
+        \label{figure:comparisons/dssim}
+    }
+    \subfloat[Ours (MS-DSSIM)]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Ours@ESPCN@MS-SSIM}
+        \label{figure:comparisons/ms-dssim}
+    }
+    \subfloat[Ours (MixGE)]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Ours@ESPCN@Sobel001}
+        \label{figure:comparisons/mixge}
+    }
+    \subfloat[Ours (Sketch)]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Ours@ESPCN@Sketch}
+        \label{figure:comparisons/sketch}
+    }
+    \subfloat[Ours (Perceptual)]{
+        \includegraphics[width=0.135\linewidth]{figs/SR/Ours@ESPCN@Perceptual}
+        \label{figure:comparisons/perceptual}
+    }
+
+    \caption[]{
+        Comparison across loss functions on the \textbf{Small} network.
+        Regions outlined in magenta are magnified to better visualize the impact of applying different SISR methods. ``Ours (MixGE)'' uses $\lambda_G = 0.01$ and the Baseline is the pre-trained Y-channel ESPCN model.
+        From top to bottom rows, images are cropped samples of the following sources:
+        \begin{enumerate*}
+            \item Manga109\cite{mtap_matsui_2017,multimedia_aizawa_2020}, \copyright~Ken~Akamatsu\label{figure:manga109}
+            \item Wikipedia (\url{https://en.wikipedia.org/wiki/File:Wikipe-tan_face.svg})
+            \item SYNLA dataset\cite{synla}
+            \item Set14 dataset\cite{zeyde2010single}.
+        \end{enumerate*}
+    }
+
+    \label{figure:comparisons}
+\end{figure*}
+

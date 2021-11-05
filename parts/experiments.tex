@@ -1,0 +1,103 @@
+\section{Experiments}
+
+\input{parts/table}
+
+In this section, we provide details about the implementation, datasets, experimental evaluation, and its results.
+
+\subsection{Small network configuration}
+
+To perform the experiments, we implement the modified version of the ESPCN CNN presented in Section~\ref{section:methodology/architectures} and illustrated in Figure~\ref{figure:espcn}. The architecture is composed of {$64$ $5\times 5$} feature maps in the first layer, {$32$ $3\times 3$} in the second, and $27$ $3\times 3$ in the last, totaling $31\,131$ learnable parameters.
+
+For each evaluated loss function, this network was trained for up to $1500$ epochs; the training process was halted after no improvements in the loss function were shown on the validation dataset for $100$ epochs. The learning rate was set to ${\alpha = 10^{-3}}$ on the first two convolution layers of the network and $10^{-4}$ on the last, with no scheduling, as reported by the authors~\cite{shi2016realtime}.
+
+We trained three networks in order to observe the effects of the $\lambda_{G}$ hyperparameter in the MixGE loss function.
+
+\subsection{\adding{Large network configuration}}
+
+In order to confirm whether our hypothesis that a loss function will perform the same across network depths, we evaluated a residual network outlined in Section~\ref{section:methodology/architectures} and Figure~\ref{figure:residual} with $4\,756\,388$ parameters, referred to as our \textbf{Large} network.
+
+Due to hardware availability constraints, only the following subset of the loss functions were evaluated in this network:
+\begin{enumerate*}
+    \item Mean Absolute Error;
+    \item Mean Squared Error;
+    \item Mixed Gradient Error with $\lambda_G = 1.00$;
+    \item Multi-scale Structural Dissimilarity;
+    \item Perceptual Loss without Max Pooling;
+    \item Structural Dissimilarity.
+\end{enumerate*}
+
+For each loss function, this network was trained for up to $1500$ epochs; the training process was halted after no improvements in the loss function were shown on the validation dataset for $50$ epochs. The initial learning rate was set to ${\alpha = 10^{-3}}$ and was multiplied by $0.1$ on every 50th epoch.
+
+\subsection{Input and Output data}
+
+Our experiments were executed on RGB images set to be upscaled by a factor of $3$. We used the central patch of each image as the high-resolution target, and prepared the low-resolution inputs by blurring the target with a Gaussian kernel of ${\sigma = 1.0}$ before downsampling with bicubic interpolation by a factor of $3$.
+
+\adding{In both network architectures, each color channel of the input images were approximated into a standard normal distribution through the following normalization step:}
+
+\begin{equation}
+    \hat{x}_{\text{Channel}} = \frac{x_{\text{Channel}} - \mu_{\text{Channel}}}{\sigma_{\text{Channel}}} \text{,}
+\end{equation}
+
+\noindent where $\mu_{\text{Red}} = 0.7026$, $\sigma_{\text{Red}} = 0.2931$, $\mu_{\text{Green}} = 0.6407$, $\sigma_{\text{Green}} = 0.2985$, $\mu_{\text{Blue}} = 0.6265$ and $\sigma_{\text{Blue}} = 0.2946$, obtained by calculating the mean and standard deviation of the training dataset.
+
+In the large network, this transformation was then reversed at the network output through the following formula:
+
+\begin{equation}
+    \hat{y}_{\text{Channel}} = y_{\text{Channel}} \cdot \sigma_{\text{Channel}} + \mu_{\text{Channel}} \text{.}
+\end{equation}
+
+\subsection{\adding{Perceptual Loss}}
+
+The first components of a neural network pre-trained by a third-party\footnote{Available at:~https://rf5.github.io/2019/07/08/danbuuro-pretrained.html} were used as the feature extractor $\phi$ for the perceptual loss.
+Two experiments were conducted with this loss, in which said components were:
+\begin{enumerate*}
+    \item a $7\times7$ convolution layer with stride 2 and 64 filters, followed by a batch normalization layer and the ReLU activation function;
+    \item the same as previous item, except for the addition of a max pooling layer.
+\end{enumerate*}
+Both versions of the $\phi$ feature extractor had $9\,536$ parameters.
+
+
+% The original network was trained to solve a multi-class classification problem on illustrations and is publicly available : Essa parte eu não entendi. É um rede de 1 camada  convolucional com 64 filtros? E depois? Tem uma FC? Como isso foi treinado para esse problema?}\footnote{Project page:~https://rf5.github.io/2019/07/08/danbuuro-pretrained.html}.
+
+% A \review{shallow : o que é esse Shallow subset?} subset with $9\,536$ parameters from a classifier network was used as the feature extractor $\phi$ for the perceptual loss, containing 64 $7 \times 7$ convolutions with stride 2. 
+
+
+
+\subsection{Datasets}
+\label{section:datasets}
+
+
+In an attempt to replicate the wide spectrum of illustrations, the following three datasets were used in this work.
+
+\subsubsection{Danbooru2020}
+
+A collection of approximately $4$ million crowdsourced illustrations~\cite{danbooru2020}\footnote{Publicly available at \url{https://www.gwern.net/Danbooru2020}.} of varying characteristics, ranging from line art to highly textured pictures. A subset of $40$ thousand randomly sampled images were selected for use during the training phase, of which $8$ thousand were used for validation at the end of each epoch. A second subset of $10$ thousand images was used for testing. Due to hardware constraints for training, we used ${96\times96}$ central patches as the ground truth images.
+
+\subsubsection{Manga109}
+\label{subsection:manga109}
+
+A collection of approximately 10 thousand comic pages drawn by professional manga artists in Japan~\cite{mtap_matsui_2017,multimedia_aizawa_2020}\footnote{Available upon request at \url{http://www.manga109.org/en/}.} used as a benchmark for SISR tasks \cite{haris2018deep,zhang2018residual}. This dataset is characterized by having mostly grayscale images with finer details such as text. We used ${288\times288}$ central patches from this dataset as the ground truth images. A larger patch size was used in order to capture a meaningful section of the illustration images present in this dataset.
+
+\subsubsection{SYNLA}
+
+In order to further evaluate the generalization capabilities of the networks and find potential pathological cases, we also included a collection of synthetic line art images~\cite{synla}\footnote{Publicly available at \url{https://github.com/bloc97/SYNLA-Dataset}.}. The dataset is available in two versions, each with roughly $2000$ images, both which were used: one in grayscale, the other in color. As the original image sizes were smaller than the patch size ${288\times288}$, specified in Section~\ref{subsection:manga109}, and not an exact multiple of our scale factor, we used ${192\times192}$ central patches from this dataset as the ground truth images.
+
+Danbooru2020 was used for training and testing, due to its wide range of illustrations in order to train networks able to generalize over style characteristics. Manga109 and SYNLA were used solely for testing.
+
+\subsection{Competitors}
+
+We compare our proposed models with the following approaches:
+
+\begin{description}
+    \item[Baseline]
+          A pre-trained\footnote{Publicly available in: \url{https://github.com/Lornatang/ESPCN-PyTorch}} ESPCN~\cite{shi2016realtime} model, using as input the Y-channel of the image in YCbCr color space.
+          This network was trained with the DIV2K~\cite{Agustsson_2017_CVPR_Workshops} dataset and the MSE loss function.
+
+    \item[Baseline-RGB]
+          The ESPCN model with RGB images as input, trained in the DIV2k dataset, MSE loss function, using the same network configuration and training parameters of our methods.
+
+    \item[Bilinear and Bicubic]
+          These interpolations methods were also included in order to establish a lower bound for effectiveness: \adding{a deep learning model that performs worse than either of them may be undesirable, as both interpolation methods are well-understood and computationally cheap.}
+\end{description}
+
+\input{parts/results}

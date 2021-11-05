@@ -1,0 +1,18 @@
+\section{Conclusions}
+
+Through the analysis of the experimental evaluation, we observed significant improvements in the super-resolution task by applying the domain knowledge in the loss function of a \adding{small} neural network. Within the context of this work, the knowledge that illustrations generally emphasize edges was used in order to search for a loss function more apt to consider this factor.
+However, the best network showed pathological behavior over certain types of images, \eg, an originally blurred image.
+
+\adding{
+    However, on larger networks, the choice of a loss function was not as impactful as originally expected. This result may provide further motivation for why the mean squared error is considered the ``default'' choice, in addition to its direct relation to the PSNR metric (Equation~\ref{equation:psnr}).
+
+    Also unexpectedly, it was observed that the ordering of loss function performances may not be maintained across network sizes: in this work, two of the worst losses in a small network (mean absolute error, structural dissimilarity) led to the best results in the large network. Exploring what causes this is a possible topic for future works.
+}
+
+Motivated by the fact that some loss functions perform better on some types of illustrations, which encompasses line art to drawings with rich textures, future works may benefit a stricter segregation by image types of the test dataset.
+
+Moreover, our work did not explore complex loss functions, such as combinations of losses, nor GANs, leaving room for improvement.
+
+\subsection*{Acknowledgments}
+
+The authors would like to thank CAPES, CNPq and FAPEMIG agencies for supporting this project.
